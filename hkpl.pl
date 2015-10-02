@@ -1,4 +1,39 @@
 #!/usr/bin/perl
+
+#############################################################################
+# Name: hkpl.pl Harmon Kardon Control
+#
+# Description: This script is able to control Harmon Kardon AVR3650, AVR365, AVR2650, AVR265
+# via the serial port
+#
+# Depends IO::Socket
+#
+# Author: Wayne Gatlin (wayne@razorcla.ws)
+# $Revision: $
+# $Date: $
+#
+##############################################################################
+# Copyright       Wayne Gatlin, 2013, All rights reserved
+##############################################################################
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+###############################################################################
+
 #use Digest::CRC qw(crc);
 #use Device::SerialPort;
 use IO::Socket;
@@ -266,7 +301,7 @@ sub GetAckMsg {
 
 sub starttcp {
  my $port = new IO::Socket::INET (
-                         PeerAddr => '192.168.195.33',
+                         PeerAddr => '192.168.1.1',
                          PeerPort => '36000',
                          Proto => 'tcp',
 			 Timeout => 2
