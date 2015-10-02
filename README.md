@@ -2,6 +2,7 @@ Harmon_Kardon_Control-
 ======================
 
 Perl script to control Harmon Kardon AVR3650, AVR365, AVR2650, AVR265
+
 if you want to use a local serial port:
 - set this line to your serial device:
 - - my $port = new Device::SerialPort('/dev/ttyUSB1');
