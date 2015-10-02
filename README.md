@@ -19,5 +19,5 @@ If you want to use a remote serial port over tcp via ser2sock
 - - PeerAddr => '192.168.1.2'
 
 To use the script:
-- ./hkpl.pl <cmd>
+- ./hkpl.pl cmd
 - You can see a list of cmds in the "%CmdMsg" hash in the script
