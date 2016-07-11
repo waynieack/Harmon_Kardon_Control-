@@ -25,18 +25,26 @@ https://github.com/f34rdotcom/ser2sock/tree/binary_mode
 
 use the following settings for ser2sock:
 
-[ser2sock]
 - Fork into the background?  Default: 0
+
 daemonize = 1
 
+
 - Serial device, Set to your serial device.
+
 device = /dev/ttyAMA0
 
+
 - Serial device baudrate
+
 baudrate = 57600
 
+
 - Port to listen for connections on.  Default: 10000
+
 port = 36000
 
+
 - This must be enabled in order to use with the hkpl script.
+
 raw_device_mode = 1
