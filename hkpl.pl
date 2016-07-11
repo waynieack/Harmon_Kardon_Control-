@@ -34,16 +34,13 @@
 # THE SOFTWARE.
 ###############################################################################
 
-#use Digest::CRC qw(crc);
-#use Device::SerialPort;
-use IO::Socket;
 my $EnableTCP; my $AckMsg;
 
-#$EnableTCP = "0"; my $port = &startserial;
-$EnableTCP = "1"; my $port = &starttcp;
+#use Device::SerialPort; $EnableTCP = "0"; my $port = &startserial('/dev/ttyUSB1');
+use IO::Socket; $EnableTCP = "1"; my $port = &starttcp('192.168.1.10','36000');
 
-my $ResponseTimeout = "10";
-my $DEBUG = "0";
+my $ResponseTimeout = "50"; #Increase the time out value if you randomly miss responses with direct serial
+my $DEBUG = 0;
 my $CmdArg = $ARGV[0];
 
 %CmdMsg = (
@@ -55,6 +52,7 @@ my $CmdArg = $ARGV[0];
 "GET_VOL_STAT" => "807000003700",
 "GET_BASS_STAT" => "807000003800",
 "GET_MUTE_STAT" => "807000003A00",
+"GET_FREQ" => "807000003400",
 "SIRIUS_TUNE_UP" => "807000003200",
 "SIRIUS_TUNE_DOWN" => "807000003300",
 "AM_BAND" => "807000001201",
@@ -188,39 +186,18 @@ my $CmdArg = $ARGV[0];
 
 my $r = '0';
 my $Cmd = ($CmdMsg{"$CmdArg"});
-#my @arr = (split(',',$Cmd));
 $Cmd =~ s/,//g;
+$FullCmd = "504353454E440204$Cmd";
+$ascii = pack('H*', $FullCmd);
 
-#foreach $byte(@arr) {
-#  if ($r eq 0) {$crc1 = $byte}
-#  if ($r eq 1) {$crc2 = $byte}
-#  if ($r eq 2) {$crc1 = "$crc1$byte"}
-#  if ($r eq 3) {$crc2 = "$crc2$byte"}
-#  $r++
-#  }
-#  @oddeve = ("$crc1","$crc2");
-#  $hash = '';
-#   foreach $byte(@oddeve) {
-#     $hash = $hash.'0x'.(sprintf '%02X', (crc((pack ('H*', $byte)),16,0x00,0x00,0,0x01,0,0))                                                                                                                                                 );
-#   }
-
-#$testbyte = '0x5A0x80';
-#$hash = $hash.'0x'.(sprintf '%02X', (crc((pack ('H*', $testbyte)),16,0x00,0x00,0,0x01,0,0)));
-#print "$hash\n";
-
-  #$FullCmd = "504353454E440204$Cmd$hash";
-   $FullCmd = "504353454E440204$Cmd";
-   $FullCmd =~ s/0x//g;
-   $ascii = pack('H*', $FullCmd);
-  print "$ascii\n" if $DEGUG;
-  print "$FullCmd\n" if $DEGUG;
+  print "$ascii\n" if $DEBUG;
+  print "$FullCmd\n" if $DEBUG;
 
 if ($EnableTCP eq "1") {
   print $port $ascii;
 } else {
   $port->lookclear;
   $port->write("$ascii");
-  $response = $port->read(30);
 }
 
 
@@ -232,21 +209,25 @@ $timeout = "0";
 	    recv($port, $msg,  10, 0); alarm 0;
   	    };
   	  alarm 0; die "Error: timeout\n" if ( $@ && $@ =~ /Timed Out/ );
-	  print "$msg\n" if $DEGUG;
+	  print "$msg\n" if $DEBUG;
         } else {
-	 ($count, $msg) = $port->read(10);
+	 ($count, $msg) = $port->read(255);
         } 
-        $rcvbuf = $msg.$rcvbuf;
-       $hex = uc(unpack('H*', $rcvbuf));
-                if ((length($hex)) eq "20") {
+        $rcvbuf = $rcvbuf.$msg;
+          print "$rcvbuf\n" if ($DEBUG eq 1);
+          $hex = uc(unpack('H*', $rcvbuf));
+	  if ($hex =~ /^(\w{20})..$/) { $hex = $1; $rcvbuf = ''; }
+	  if ($hex =~ /(\w{20})(\w{20})/) { $hex = $1; $rcvbuf = $2; }
+          if ($hex =~ /^(\w{20})$/) { $hex = $1; $rcvbuf = ''; }
+	  chomp($hex);
+                if ((length($hex)) eq 20) {
 		 $AckMsg = ($CmdAck{"$hex"});
 			if ($AckMsg eq '') { $AckMsg = ($CmdAck{(substr ($hex, 0, 18))});} # try stripping the checksum
 			if ($AckMsg eq '') { $AckMsg = ($CmdAck{(substr ($hex, 0, 16))});} # strip last 2 for vol caculations
-			#print "$AckMsg\n";
 			$AckMsg = &GetAckMsg if &GetAckMsg; 
-			
-		 print "$AckMsg\n";
+		  print "$AckMsg\n";
                   $port->close();
+		 $timeout = $ResponseTimeout if ((length($rcvbuf)) eq 0);
                  }
         $timeout++;
   }
@@ -255,13 +236,13 @@ $port->close();
 
 
 sub startserial {
-  my $port = new Device::SerialPort('/dev/ttyUSB1');
+  my ($serial_port) = @_;
+  my $port = new Device::SerialPort($serial_port);
   $port->user_msg(ON);
   $port->baudrate(57600);
   $port->parity("none");
   $port->databits(8);
   $port->stopbits(1);
-  $port->handshake("xoff");
   $port->write_settings;
   return $port;
 }
@@ -300,12 +281,14 @@ sub GetAckMsg {
 
 
 sub starttcp {
+  my ($ip,$port) = @_;
  my $port = new IO::Socket::INET (
-                         PeerAddr => '192.168.1.1',
-                         PeerPort => '36000',
+                         PeerAddr => $ip,
+                         PeerPort => $port,
                          Proto => 'tcp',
 			 Timeout => 2
                                  );
   die "Could not create socket: $!\n" unless $port;
   return $port;
 }
+
