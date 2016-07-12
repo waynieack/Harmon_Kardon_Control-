@@ -20,6 +20,10 @@ To use the script:
 - You can see a list of cmds in the "%CmdMsg" hash in the script
 
 
+If you randomly miss responses, increase the time out value below. This seems to happen with direct serial.
+- my $ResponseTimeout = "50";
+
+
 You can get ser2sock from here:
 https://github.com/f34rdotcom/ser2sock/tree/binary_mode
 
